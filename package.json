@@ -1,0 +1,17 @@
+{
+  "name": "sejarah-bot",
+  "version": "1.0.0",
+  "description": "Sejarah Bot — Academic support chatbot for Malaysian History (DSKP Kaum-Kaum)",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "web": "npx serve . -p 3000"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "node-telegram-bot-api": "^0.66.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
