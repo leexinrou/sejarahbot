@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sejarah Bot 🇲🇾</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f0f2f5;
+      --header-bg: #c0392b;
+      --header-text: #ffffff;
+      --bot-bubble: #ffffff;
+      --user-bubble: #c0392b;
+      --user-text: #ffffff;
+      --bot-text: #1a1a1a;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --input-bg: #ffffff;
+      --send-btn: #c0392b;
+      --send-btn-hover: #a93226;
+      --shadow: 0 1px 4px rgba(0,0,0,0.08);
+      --font: -apple-system, "Segoe UI", system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chat-wrapper {
+      width: 100%;
+      max-width: 480px;
+      height: 100dvh;
+      max-height: 700px;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    }
+
+    /* ── Header ── */
+    .chat-header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .header-avatar {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .header-info h1 { font-size: 15px; font-weight: 700; }
+    .header-info p  { font-size: 12px; opacity: 0.85; margin-top: 1px; }
+    .header-badge {
+      margin-left: auto;
+      background: #27ae60;
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 600;
+    }
+
+    /* ── Messages area ── */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--bg);
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+
+    /* ── Bubbles ── */
+    .message { display: flex; gap: 8px; max-width: 90%; }
+    .message.bot  { align-self: flex-start; }
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      word-break: break-word;
+      box-shadow: var(--shadow);
+    }
+    .message.bot  .bubble {
+      background: var(--bot-bubble);
+      color: var(--bot-text);
+      border-bottom-left-radius: 4px;
+    }
+    .message.user .bubble {
+      background: var(--user-bubble);
+      color: var(--user-text);
+      border-bottom-right-radius: 4px;
+    }
+
+    .bot-avatar {
+      width: 30px; height: 30px;
+      background: var(--header-bg);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      align-self: flex-end;
+    }
+
+    /* Bold markdown-like *text* */
+    .bubble b { font-weight: 700; }
+
+    /* ── Quick replies ── */
+    .quick-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+      margin-left: 38px;
+    }
+    .qr-btn {
+      background: #fff;
+      border: 1.5px solid var(--header-bg);
+      color: var(--header-bg);
+      border-radius: 99px;
+      padding: 5px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: background 0.15s, color 0.15s;
+    }
+    .qr-btn:hover { background: var(--header-bg); color: #fff; }
+
+    /* ── Typing indicator ── */
+    .typing { display: flex; gap: 4px; align-items: center; padding: 12px 14px; }
+    .typing span {
+      width: 7px; height: 7px;
+      background: #9ca3af;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    /* ── Input bar ── */
+    .chat-input-bar {
+      padding: 10px 12px;
+      background: #fff;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .chat-input-bar input {
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: 99px;
+      padding: 9px 16px;
+      font-size: 13.5px;
+      font-family: var(--font);
+      outline: none;
+      transition: border-color 0.15s;
+      background: var(--input-bg);
+    }
+    .chat-input-bar input:focus { border-color: var(--header-bg); }
+    .send-btn {
+      width: 38px; height: 38px;
+      background: var(--send-btn);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .send-btn:hover { background: var(--send-btn-hover); }
+    .send-btn svg { width: 18px; height: 18px; fill: #fff; }
+
+    /* ── Timestamp ── */
+    .ts { font-size: 10px; color: var(--muted); margin-top: 3px; text-align: right; }
+    .message.bot .ts { text-align: left; margin-left: 38px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 500px) {
+      .chat-wrapper { border-radius: 0; max-height: 100dvh; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-wrapper">
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="header-avatar">📚</div>
+    <div class="header-info">
+      <h1>Sejarah Bot</h1>
+      <p>Pembantu Ulang Kaji Sejarah DSKP</p>
+    </div>
+    <div class="header-badge">● Online</div>
+  </div>
+
+  <!-- Messages -->
+  <div class="chat-messages" id="chat-messages"></div>
+
+  <!-- Input -->
+  <div class="chat-input-bar">
+    <input type="text" id="user-input" placeholder="Taip soalan anda di sini..." autocomplete="off" />
+    <button class="send-btn" id="send-btn" title="Hantar">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// Engine (inlined from engine.js for standalone HTML)
+// ─────────────────────────────────────────────
+
+const KNOWLEDGE = {
+  overview: {
+    keywords: ['topik', 'overview', 'keseluruhan', 'masyarakat majmuk', 'plural society', 'kaum di malaysia', 'kaum-kaum', 'ringkasan', 'summary', 'apa yang', 'terangkan topik'],
+    title: 'Topik: Kaum-Kaum di Malaysia & Masyarakat Majmuk',
+    content: `📚 <b>Topik: Kaum-Kaum di Malaysia &amp; Masyarakat Majmuk</b>\n\nTopik ini merangkumi:\n1️⃣ Asal usul masyarakat majmuk di Tanah Melayu\n2️⃣ Sebab kedatangan kaum Cina ke Tanah Melayu\n3️⃣ Sebab kedatangan kaum India ke Tanah Melayu\n4️⃣ Dasar British: Pecah dan Perintah\n5️⃣ Hubungan antara kaum semasa penjajahan British\n6️⃣ Kerjasama kaum menuju kemerdekaan (Parti Perikatan)\n\nTaip nombor atau nama subtopik untuk penerangan lanjut.`,
+  },
+  asal_masyarakat_majmuk: {
+    keywords: ['asal usul', 'asal', 'usul', 'bagaimana terbentuk', 'kenapa ada pelbagai', 'mengapa ada pelbagai kaum', 'terbentuk', 'pembentukan masyarakat'],
+    title: 'Asal Usul Masyarakat Majmuk',
+    content: `🏛️ <b>Asal Usul Masyarakat Majmuk di Tanah Melayu</b>\n\nMasyarakat majmuk terbentuk akibat dasar penjajahan British yang menggalakkan penghijrahan masuk kaum lain ke Tanah Melayu.\n\n📌 <b>Faktor utama:</b>\n• British memerlukan tenaga buruh murah untuk industri perlombongan bijih timah dan ladang getah\n• Kaum Cina dibawa masuk terutama untuk kerja lombong\n• Kaum India dibawa masuk terutama untuk kerja ladang getah\n• Orang Melayu kekal sebagai petani dan nelayan di kawasan luar bandar\n\n📌 <b>Akibatnya:</b>\n• Setiap kaum tinggal dalam kawasan berasingan\n• Setiap kaum mempunyai sistem pendidikan, bahasa, dan budaya sendiri\n• Interaksi antara kaum adalah terhad\n\n💡 <b>Masyarakat majmuk</b> = masyarakat yang terdiri daripada pelbagai kaum yang hidup bersama tetapi tidak bercampur secara menyeluruh.`,
+  },
+  kaum_cina: {
+    keywords: ['cina', 'china', 'tionghua', 'cina datang', 'kedatangan cina', 'mengapa cina', 'kenapa cina', 'sebab cina'],
+    title: 'Kedatangan Kaum Cina',
+    content: `🟡 <b>Kedatangan Kaum Cina ke Tanah Melayu</b>\n\n📌 <b>Sebab-sebab kedatangan:</b>\n• <b>Tolak (Push factors):</b> Kemiskinan, kebuluran, dan kekacauan politik di negara China (Dynasty Qing runtuh, Perang Candu)\n• <b>Tarik (Pull factors):</b> Peluang ekonomi di Tanah Melayu — terutama industri perlombongan bijih timah di Perak dan Selangor\n\n📌 <b>Peranan utama:</b>\n• Buruh lombong bijih timah\n• Pedagang dan peniaga di bandar\n• Membuka kedai dan perniagaan kecil\n\n📌 <b>Kawasan penempatan:</b>\n• Larut, Kuala Lumpur, Taiping (kawasan lombong)\n• Georgetown, Kuala Lumpur (bandar)\n\n📌 <b>Impak:</b>\n• Pertumbuhan pesat ekonomi bijih timah\n• Pembentukan bandar-bandar baru di Tanah Melayu`,
+  },
+  kaum_india: {
+    keywords: ['india', 'tamil', 'india datang', 'kedatangan india', 'mengapa india', 'kenapa india', 'sebab india', 'ladang getah'],
+    title: 'Kedatangan Kaum India',
+    content: `🟠 <b>Kedatangan Kaum India ke Tanah Melayu</b>\n\n📌 <b>Sebab-sebab kedatangan:</b>\n• <b>Tolak (Push factors):</b> Kemiskinan dan kekurangan tanah di India Selatan (Tamil Nadu)\n• <b>Tarik (Pull factors):</b> Permintaan tinggi buruh untuk ladang getah\n\n📌 <b>Sistem pengambilan:</b>\n• <b>Sistem Kangani</b> — Ketua buruh dihantar ke India untuk merekrut pekerja\n• <b>Sistem Kontrak</b> — Pekerja terikat kontrak bekerja di ladang\n\n📌 <b>Peranan utama:</b>\n• Buruh ladang getah\n• Tukang besi, buruh pembinaan jalan kereta api\n• Sebahagian kecil jadi profesional dan berkhidmat dalam kerajaan British\n\n📌 <b>Kawasan penempatan:</b>\n• Ladang getah di Perak, Selangor, Johor, Negeri Sembilan\n\n📌 <b>Impak:</b>\n• Industri getah berkembang menjadi sumber pendapatan utama Tanah Melayu`,
+  },
+  kaum_melayu: {
+    keywords: ['melayu', 'orang melayu', 'bumiputera', 'penduduk asal', 'kaum melayu'],
+    title: 'Orang Melayu dalam Masyarakat Majmuk',
+    content: `🟢 <b>Orang Melayu dalam Masyarakat Majmuk</b>\n\n📌 <b>Kedudukan orang Melayu semasa British:</b>\n• Penduduk asal (bumiputera) Tanah Melayu\n• British mengiktiraf raja-raja Melayu melalui Sistem Residen\n• Orang Melayu digalakkan kekal dalam sektor pertanian dan perikanan\n\n📌 <b>Dasar British terhadap orang Melayu:</b>\n• British tidak menggalakkan orang Melayu berhijrah ke bandar\n• Orang Melayu ditempatkan di kawasan luar bandar\n• Peluang pendidikan lebih terhad\n\n📌 <b>Akibat:</b>\n• Jurang ekonomi antara orang Melayu dan bukan Melayu melebar\n• Menjadi isu utama dalam perundingan kemerdekaan`,
+  },
+  dasar_british: {
+    keywords: ['dasar british', 'pecah dan perintah', 'divide and rule', 'dasar penjajah', 'british', 'penjajahan', 'kolonial', 'strategi british'],
+    title: 'Dasar British: Pecah dan Perintah',
+    content: `⚖️ <b>Dasar British: Pecah dan Perintah (Divide and Rule)</b>\n\n📌 <b>Apakah dasar ini?</b>\nBritish sengaja mengasingkan kaum-kaum di Tanah Melayu supaya mereka tidak bersatu dan mudah diperintah.\n\n📌 <b>Cara pelaksanaan:</b>\n• <b>Kawasan berasingan:</b> Melayu di kampung, Cina di lombong/bandar, India di ladang\n• <b>Pekerjaan berasingan:</b> Setiap kaum dikhaskan untuk sektor ekonomi tertentu\n• <b>Sekolah berasingan:</b> Sekolah Melayu, Sekolah Cina, Sekolah Tamil\n• <b>Undang-undang berbeza:</b> Hukum adat Melayu, undang-undang ladang untuk India\n\n📌 <b>Kesan dasar ini:</b>\n• Setiap kaum hidup dalam "dunia" tersendiri\n• Timbul stereotaip dan prejudis antara kaum\n• Jurang sosial dan ekonomi semakin melebar\n\n💡 Ini adalah asas kepada cabaran perpaduan kaum yang Malaysia hadapi hingga kini.`,
+  },
+  kerjasama_kemerdekaan: {
+    keywords: ['kemerdekaan', 'merdeka', 'kerjasama kaum', 'bersatu', 'parti perikatan', 'perikatan', 'umno', 'mca', 'mic', 'tolak ansur', 'kontrak sosial', 'perpaduan'],
+    title: 'Kerjasama Kaum & Kemerdekaan',
+    content: `🇲🇾 <b>Kerjasama Kaum Menuju Kemerdekaan</b>\n\n📌 <b>Parti Perikatan (1955)</b>\nGabungan tiga parti mewakili tiga kaum utama:\n• <b>UMNO</b> (United Malays National Organisation) — Orang Melayu\n• <b>MCA</b> (Malayan Chinese Association) — Kaum Cina\n• <b>MIC</b> (Malayan Indian Congress) — Kaum India\n\n📌 <b>Prinsip Tolak Ansur:</b>\n• Kaum Cina dan India menerima kedudukan istimewa orang Melayu\n• Orang Melayu bersetuju memberikan kewarganegaraan kepada kaum Cina dan India\n• Bahasa Melayu dijadikan bahasa kebangsaan\n\n📌 <b>Kontrak Sosial:</b>\n• Perjanjian tidak bertulis antara kaum sebagai asas penubuhan negara Malaysia\n• Menjadi asas Perlembagaan Malaysia 1957\n\n📌 <b>Kemerdekaan 31 Ogos 1957:</b>\nHasil kerjasama dan semangat tolak ansur antara kaum.\n\n✨ <b>Mesej utama:</b> Kemerdekaan dicapai melalui <b>tolak ansur dan kerjasama</b>.`,
+  },
+  kesan_utama: {
+    keywords: ['kesan', 'impak', 'akibat', 'effect', 'hasil', 'apa kesan', 'apakah kesan'],
+    title: 'Kesan Utama',
+    content: `📊 <b>Kesan Utama Pembentukan Masyarakat Majmuk</b>\n\n📌 <b>Kesan Ekonomi:</b>\n• Malaysia berkembang menjadi pengeluar bijih timah dan getah terbesar dunia\n• Namun, kekayaan tidak diagihkan sama rata antara kaum\n\n📌 <b>Kesan Sosial:</b>\n• Jurang sosial dan budaya yang ketara antara kaum\n• Setiap kaum mengekalkan bahasa, agama, dan adat resam tersendiri\n• Interaksi antara kaum sangat terhad\n\n📌 <b>Kesan Politik:</b>\n• Wujud kesedaran kebangsaan dalam kalangan semua kaum\n• Kaum-kaum bersatu dalam Parti Perikatan untuk menuntut kemerdekaan\n\n📌 <b>Kesan Jangka Panjang:</b>\n• Dasar Ekonomi Baru (DEB) 1971 untuk menangani jurang ekonomi\n• Keperluan berterusan untuk memupuk perpaduan kaum di Malaysia`,
+  },
+};
+
+const PRACTICE_QUESTIONS = {
+  kaum_cina: [
+    { q: 'Nyatakan DUA faktor tolak yang menyebabkan kaum Cina berhijrah ke Tanah Melayu.', a: 'Faktor tolak: (1) Kemiskinan dan kebuluran di China; (2) Kekacauan politik — runtuhnya Dynasty Qing dan perang saudara.' },
+    { q: 'Apakah sektor ekonomi utama yang dimainkan oleh kaum Cina di Tanah Melayu?', a: 'Perlombongan bijih timah dan perniagaan/perdagangan di kawasan bandar.' },
+  ],
+  kaum_india: [
+    { q: 'Terangkan sistem Kangani yang digunakan untuk membawa buruh India ke Tanah Melayu.', a: 'Sistem Kangani — seorang ketua buruh (kangani) dihantar ke India untuk merekrut pekerja ladang getah dengan tawaran pekerjaan dan penginapan.' },
+    { q: 'Di kawasan manakah kebanyakan kaum India menetap di Tanah Melayu?', a: 'Ladang-ladang getah di negeri Perak, Selangor, Johor, dan Negeri Sembilan.' },
+  ],
+  dasar_british: [
+    { q: 'Apakah yang dimaksudkan dengan dasar "Pecah dan Perintah" British?', a: 'Dasar British mengasingkan kaum-kaum mengikut kawasan, pekerjaan, dan sistem pendidikan supaya mereka tidak bersatu dan mudah diperintah.' },
+    { q: 'Berikan DUA cara British melaksanakan dasar pecah dan perintah.', a: '(1) Mengasingkan kaum mengikut kawasan; (2) Menyediakan sekolah berasingan dengan bahasa pengantar berbeza.' },
+  ],
+  kerjasama_kemerdekaan: [
+    { q: 'Apakah tiga parti yang membentuk Parti Perikatan pada tahun 1955?', a: 'UMNO (Melayu), MCA (Cina), dan MIC (India).' },
+    { q: 'Jelaskan prinsip tolak ansur yang diamalkan oleh kaum-kaum dalam Parti Perikatan.', a: 'Kaum Cina dan India menerima kedudukan istimewa orang Melayu; orang Melayu pula bersetuju memberikan kewarganegaraan kepada kaum Cina dan India.' },
+  ],
+  asal_masyarakat_majmuk: [
+    { q: 'Mengapakah masyarakat majmuk terbentuk di Tanah Melayu?', a: 'Kerana dasar penjajahan British yang membawa masuk kaum Cina dan India sebagai buruh untuk industri perlombongan bijih timah dan ladang getah.' },
+    { q: 'Apakah ciri utama masyarakat majmuk?', a: 'Masyarakat terdiri daripada pelbagai kaum yang hidup bersama tetapi tidak bercampur — setiap kaum mengekalkan bahasa, budaya, dan agama tersendiri.' },
+  ],
+};
+
+const ESCALATION_KEYWORDS = ['peperiksaan sebenar','exam sebenar','soalan peperiksaan','tugasan','assignment','pt3','spm','upsr','jawab esei','tulis esei','buat esei','hantar','markah','gred','grade','jawapan penuh'];
+const OUT_OF_SCOPE_KEYWORDS = ['perang dunia','revolusi perancis','sejarah eropah','sejarah china','sejarah india','tamadun','greek','rom','ottoman','matematik','sains','fizik','kimia','biologi','geografi','ekonomi','english','bahasa inggeris'];
+
+const session = { fallbackCount: 0, lastTopic: null, _pendingQuestion: null };
+
+function normalize(t) { return t.toLowerCase().replace(/[^a-z0-9\u00c0-\u024f\s]/g,' ').replace(/\s+/g,' ').trim(); }
+
+function matchIntent(text) {
+  const t = normalize(text);
+  if (/\b(hi|hello|helo|hai|assalamualaikum|salam|selamat|apa khabar)\b/.test(t)) return 'greeting';
+  if (/\b(latihan|soalan|practice|quiz|cuba|test|tanya|contoh soalan|soal)\b/.test(t)) return 'practice';
+  if (/\b(help|tolong|bantuan|menu|pilihan|boleh bantu|apa yang awak boleh|apa boleh)\b/.test(t)) return 'help';
+  if (/\b(bye|terima kasih|thanks|thank you|selesai|habis|ok dah|sudah|cukup)\b/.test(t)) return 'bye';
+  for (const [key, topic] of Object.entries(KNOWLEDGE)) {
+    for (const kw of topic.keywords) { if (t.includes(kw)) return key; }
+  }
+  return null;
+}
+
+function pickQ(topicKey) {
+  const qs = PRACTICE_QUESTIONS[topicKey];
+  if (!qs) return null;
+  return qs[Math.floor(Math.random() * qs.length)];
+}
+
+function processMessage(rawInput) {
+  if (!rawInput || !rawInput.trim()) return { text: 'Sila taip soalan atau topik yang ingin awak ulang kaji. 😊', qr: [] };
+
+  const input = rawInput.trim();
+  const t = normalize(input);
+
+  // Escalation
+  if (ESCALATION_KEYWORDS.some(kw => t.includes(kw))) {
+    return { text: '⚠️ Maaf, saya tidak boleh membantu menjawab soalan peperiksaan sebenar atau tugasan bergred.\n\nSila hubungi guru Sejarah anda melalui WhatsApp:\n👉 <a href="https://wa.me/60111234567" target="_blank">+60111234567</a>\n\nSaya boleh membantu awak <b>memahami</b> dan <b>mengulang kaji</b> topik ini.', qr: ['Menu topik', 'Soalan latihan'] };
+  }
+  if (OUT_OF_SCOPE_KEYWORDS.some(kw => t.includes(kw))) {
+    return { text: '⚠️ Maaf, saya hanya boleh membantu dengan topik <b>Kaum-Kaum di Malaysia</b> dalam skop DSKP Sejarah.\n\nUntuk topik lain, sila hubungi guru anda melalui WhatsApp:\n👉 <a href="https://wa.me/60111234567" target="_blank">+60111234567</a>', qr: ['Menu topik'] };
+  }
+
+  const intent = matchIntent(input);
+
+  // Reveal answer
+  if (/\b(jawapan|answer|semak|check|tunjuk jawapan)\b/.test(t)) {
+    if (session._pendingQuestion) {
+      const pq = session._pendingQuestion;
+      session._pendingQuestion = null;
+      return { text: `✅ <b>Jawapan:</b>\n${pq.a}\n\nTaip "latihan lagi" untuk soalan seterusnya!`, qr: ['Latihan lagi', 'Menu topik'] };
+    }
+    return { text: 'Taip soalan atau topik dahulu, kemudian minta jawapan. 😊', qr: ['Menu topik'] };
+  }
+
+  // More practice
+  if (/latihan lagi|soalan lagi|next question/.test(t)) {
+    if (session.lastTopic && PRACTICE_QUESTIONS[session.lastTopic]) {
+      const pq = pickQ(session.lastTopic);
+      session._pendingQuestion = pq;
+      return { text: `✏️ <b>Soalan Latihan:</b>\n\n${pq.q}\n\n<i>(Taip "jawapan" untuk semak.)</i>`, qr: ['Jawapan', 'Menu topik'] };
+    }
+    return { text: 'Taip nama subtopik dahulu untuk mendapatkan soalan latihan berkaitan.', qr: ['Menu topik'] };
+  }
+
+  if (intent === 'greeting') {
+    session.fallbackCount = 0;
+    return { text: '👋 Assalamualaikum! Saya <b>Sejarah Bot</b>, pembantu ulang kaji anda untuk topik <b>Kaum-Kaum di Malaysia</b>.\n\nSaya boleh membantu anda dengan penerangan subtopik dan soalan latihan.\n\nTaip <b>"menu"</b> untuk lihat semua topik, atau terus tanya!', qr: ['Menu topik', 'Kaum Cina', 'Kaum India', 'Dasar British'] };
+  }
+
+  if (intent === 'help') {
+    session.fallbackCount = 0;
+    return { text: KNOWLEDGE.overview.content, qr: ['Kaum Cina', 'Kaum India', 'Dasar British', 'Kemerdekaan'] };
+  }
+
+  if (intent === 'bye') {
+    session.fallbackCount = 0;
+    return { text: '🎓 Terima kasih kerana menggunakan Sejarah Bot! Semoga berjaya dalam ulang kaji awak.\n\nIngat: <b>Ilmu adalah pelaburan terbaik!</b> 📚', qr: ['Mula semula'] };
+  }
+
+  if (intent === 'practice') {
+    session.fallbackCount = 0;
+    if (!session.lastTopic || !PRACTICE_QUESTIONS[session.lastTopic]) {
+      return { text: '✏️ Soalan latihan untuk topik mana?\n\n1️⃣ Asal usul masyarakat majmuk\n2️⃣ Kedatangan kaum Cina\n3️⃣ Kedatangan kaum India\n4️⃣ Dasar British\n5️⃣ Kerjasama kaum &amp; kemerdekaan', qr: ['Soalan latihan Cina', 'Soalan latihan India', 'Soalan latihan British'] };
+    }
+    const pq = pickQ(session.lastTopic);
+    session._pendingQuestion = pq;
+    return { text: `✏️ <b>Soalan Latihan (${KNOWLEDGE[session.lastTopic]?.title}):</b>\n\n${pq.q}\n\n<i>(Cuba jawab sendiri, kemudian taip "jawapan".)</i>`, qr: ['Jawapan'] };
+  }
+
+  if (intent && KNOWLEDGE[intent]) {
+    session.fallbackCount = 0;
+    session.lastTopic = intent;
+    const hasPractice = !!PRACTICE_QUESTIONS[intent];
+    const extra = hasPractice ? '\n\n💡 Mahu mencuba soalan latihan untuk topik ini?' : '';
+    return { text: KNOWLEDGE[intent].content + extra, qr: hasPractice ? ['Latihan', 'Menu topik'] : ['Menu topik'] };
+  }
+
+  // Numeric shortcut
+  const numMap = { '1': 'asal_masyarakat_majmuk', '2': 'kaum_cina', '3': 'kaum_india', '4': 'dasar_british', '5': 'kerjasama_kemerdekaan', '6': 'kesan_utama' };
+  if (numMap[input.trim()]) {
+    const key = numMap[input.trim()];
+    session.fallbackCount = 0;
+    session.lastTopic = key;
+    const hasPractice = !!PRACTICE_QUESTIONS[key];
+    return { text: KNOWLEDGE[key].content + (hasPractice ? '\n\n💡 Mahu mencuba soalan latihan?' : ''), qr: hasPractice ? ['Latihan', 'Menu topik'] : ['Menu topik'] };
+  }
+
+  // Fallback
+  session.fallbackCount += 1;
+  if (session.fallbackCount >= 2) {
+    session.fallbackCount = 0;
+    return { text: '😔 Maaf, saya masih tidak dapat memahami soalan awak.\n\nSila hubungi guru Sejarah anda melalui WhatsApp:\n👉 <a href="https://wa.me/60111234567" target="_blank">+60111234567</a>\n\nJika ingin teruskan, taip <b>"menu"</b>.', qr: ['Menu topik'] };
+  }
+  return { text: 'Maaf, saya kurang faham. Boleh awak nyatakan subtopik kaum mana yang nak diulang kaji atau cuba tanya dengan cara lain?\n\nContoh:\n• "Terangkan kaum Cina"\n• "Apakah dasar British?"\n• "Soalan latihan kemerdekaan"', qr: ['Menu topik', 'Kaum Cina', 'Dasar British'] };
+}
+
+// ─────────────────────────────────────────────
+// UI
+// ─────────────────────────────────────────────
+
+const messagesEl = document.getElementById('chat-messages');
+const inputEl    = document.getElementById('user-input');
+const sendBtn    = document.getElementById('send-btn');
+
+function ts() {
+  const d = new Date();
+  return d.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderBubble(text, who) {
+  const wrapper = document.createElement('div');
+  wrapper.className = `message ${who}`;
+
+  if (who === 'bot') {
+    const av = document.createElement('div');
+    av.className = 'bot-avatar';
+    av.textContent = '📚';
+    wrapper.appendChild(av);
+  }
+
+  const col = document.createElement('div');
+  col.style.display = 'flex';
+  col.style.flexDirection = 'column';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  // Convert \n to <br> and keep HTML bold tags
+  bubble.innerHTML = text.replace(/\n/g, '<br>');
+  col.appendChild(bubble);
+
+  const time = document.createElement('div');
+  time.className = 'ts';
+  time.textContent = ts();
+  col.appendChild(time);
+
+  wrapper.appendChild(col);
+  return wrapper;
+}
+
+function renderQuickReplies(qrs) {
+  if (!qrs || qrs.length === 0) return null;
+  const bar = document.createElement('div');
+  bar.className = 'quick-replies';
+  qrs.forEach(label => {
+    const btn = document.createElement('button');
+    btn.className = 'qr-btn';
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      bar.remove();
+      sendMessage(label);
+    });
+    bar.appendChild(btn);
+  });
+  return bar;
+}
+
+function showTyping() {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'message bot';
+  wrapper.id = 'typing-indicator';
+  const av = document.createElement('div');
+  av.className = 'bot-avatar';
+  av.textContent = '📚';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  wrapper.appendChild(av);
+  wrapper.appendChild(bubble);
+  messagesEl.appendChild(wrapper);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+function sendMessage(text) {
+  const val = text !== undefined ? text : inputEl.value.trim();
+  if (!val) return;
+  inputEl.value = '';
+
+  // User bubble
+  messagesEl.appendChild(renderBubble(val, 'user'));
+  scrollBottom();
+
+  // Typing indicator
+  showTyping();
+  sendBtn.disabled = true;
+
+  setTimeout(() => {
+    removeTyping();
+    const { text: botText, qr } = processMessage(val);
+    messagesEl.appendChild(renderBubble(botText, 'bot'));
+    const qrEl = renderQuickReplies(qr);
+    if (qrEl) messagesEl.appendChild(qrEl);
+    scrollBottom();
+    sendBtn.disabled = false;
+    inputEl.focus();
+  }, 700 + Math.random() * 400);
+}
+
+sendBtn.addEventListener('click', () => sendMessage());
+inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+
+// Welcome message on load
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const { text, qr } = processMessage('hello');
+    messagesEl.appendChild(renderBubble(text, 'bot'));
+    const qrEl = renderQuickReplies(qr);
+    if (qrEl) messagesEl.appendChild(qrEl);
+    scrollBottom();
+  }, 300);
+});
+</script>
+</body>
+</html>
